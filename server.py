@@ -1,6 +1,7 @@
 #from socket import *
 import datetime
 import random
+import threading
 
 from netTools import *
 
@@ -45,16 +46,18 @@ def sendError(socket):
 
 def beginBanana(conn):
     print("banana time")
-    sendAMessage(conn, "Banana")
+    #sendAMessage(conn, "Banana")
     received = receiveAMessage(conn)
+    print("got " + received)
     while received == "\tBanana who?":
         sendAMessage(conn, "Banana")
         received = receiveAMessage(conn)
-    
+
+    print("??? " + received)
     # loop ended, so they didnt send banana who
     if received == "\tBanana WHO!?":
         # finish the joke
-        
+
         # hmmmmm
         # this feels weird
         # i didnt copy and paste this
@@ -65,17 +68,14 @@ def beginBanana(conn):
         the server sends banana
         it goes through the whole "banana who" stuff
         it then returns back to the standard knock-knock protocol
+        rather than implementing it again here
         """
         sendAMessage(conn, "Orange")
-        received = receiveAMessage(conn)
-        if received == "\tOrange who?":
-            sendAMessage(conn, "Orange you glad I didn't say Banana")
-        else:
-            sendError(conn)
+        return True
         #conn.close()
-    else:
-        # sent the wrong thing
-        sendError(conn)
+
+    # if this runs, they sent the wrong thing
+    return False
 
 def processRequest(conn):
 
@@ -99,21 +99,45 @@ def processRequest(conn):
     sendAMessage(conn, "Knock-Knock")
     received = receiveAMessage(conn)
     whichJoke = jokes[random.randint(0, len(jokes) - 1)]
+    name = whichJoke[0]
+    punchline = whichJoke[1]
     # print(whichJoke)
 
     if received == "\tWho's there?":
-        sendAMessage(conn, whichJoke[0])
+        sendAMessage(conn, name)
+
+        #received = receiveAMessage(conn)
+
+        wasBanana = False
+        shouldContinue = True
+
+        if name == "Banana":
+            # sorry, my bad, right here
+            wasBanana = True
+            shouldContinue = beginBanana(conn)
+            name = "Orange"
+            # this feels a bit better
+            # its like a small detour from the protocol
 
         received = receiveAMessage(conn)
-        if received == "\t" + whichJoke[0] + " who?":
+        #print("are we ser " + received)
 
-            # right here
+        # either it was *not* the banana joke and we got the correct response
+        # or we began the banana joke and should continue
+        #if ((not wasBanana) and received == "\t" + whichJoke[0] + " who?") or (wasBanana and shouldContinue):
+        if (shouldContinue) and received == "\t" + name + " who?":
+
+            sendAMessage(conn, punchline)
+            """
+            # oops
+            # wrong spot
             if whichJoke[0] == "Banana":
                 # the banana joke
                 beginBanana(conn)
             else:
                 # send the funny punchline
                 sendAMessage(conn, whichJoke[1])
+            """
             # conn.close()
         else:
             sendError(conn)
@@ -139,6 +163,7 @@ def simpleServer():
     while True:
         print("Waiting")
         conn, addr = s.accept()
-        processRequest(conn)
+        threading.Thread(target=processRequest, args=(conn,)).start()
+        #processRequest(conn)
 
 simpleServer()
