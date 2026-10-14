@@ -16,6 +16,7 @@ fid.close()
 
 recentlySent = True
 recentData = ""
+isFirstOpen = True
 
 
 def sendAMessage(socket, message):
@@ -42,6 +43,87 @@ def sendError(socket):
     sendAMessage(socket, "error: terrible at knock-knock jokes")
     #socket.close()
 
+def beginBanana(conn):
+    print("banana time")
+    sendAMessage(conn, "Banana")
+    received = receiveAMessage(conn)
+    while received == "\tBanana who?":
+        sendAMessage(conn, "Banana")
+        received = receiveAMessage(conn)
+    
+    # loop ended, so they didnt send banana who
+    if received == "\tBanana WHO!?":
+        # finish the joke
+        
+        # hmmmmm
+        # this feels weird
+        # i didnt copy and paste this
+        # but its really just the standard knock knock protocol
+        # hmmmmmmm
+        """
+        what im thinking is basically
+        the server sends banana
+        it goes through the whole "banana who" stuff
+        it then returns back to the standard knock-knock protocol
+        """
+        sendAMessage(conn, "Orange")
+        received = receiveAMessage(conn)
+        if received == "\tOrange who?":
+            sendAMessage(conn, "Orange you glad I didn't say Banana")
+        else:
+            sendError(conn)
+        #conn.close()
+    else:
+        # sent the wrong thing
+        sendError(conn)
+
+def processRequest(conn):
+
+    global isFirstOpen
+    global recentlySent
+    global recentData
+
+    if isFirstOpen == True:
+        # first time opened
+        print("connected, first open")
+        isFirstOpen = False
+    else:
+        print("connected, not the first open")
+        if recentlySent:
+            # its last action was to send data
+            print("recent sent message: " + recentData)
+        else:
+            # it last received data
+            print("recent received message: " + recentData)
+
+    sendAMessage(conn, "Knock-Knock")
+    received = receiveAMessage(conn)
+    whichJoke = jokes[random.randint(0, len(jokes) - 1)]
+    # print(whichJoke)
+
+    if received == "\tWho's there?":
+        sendAMessage(conn, whichJoke[0])
+
+        received = receiveAMessage(conn)
+        if received == "\t" + whichJoke[0] + " who?":
+
+            # right here
+            if whichJoke[0] == "Banana":
+                # the banana joke
+                beginBanana(conn)
+            else:
+                # send the funny punchline
+                sendAMessage(conn, whichJoke[1])
+            # conn.close()
+        else:
+            sendError(conn)
+            # print("JAKJAJKS")
+
+    else:
+        sendError(conn)
+        # print("i heard " + received)
+    conn.close()
+
 
 def simpleServer():
     s = socket(AF_INET, SOCK_STREAM)
@@ -57,46 +139,6 @@ def simpleServer():
     while True:
         print("Waiting")
         conn, addr = s.accept()
-
-        if isFirstOpen == True:
-            # first time opened
-            print("connected, first open")
-            isFirstOpen = False
-        else:
-            print("connected, not the first open")
-            if recentlySent:
-                # its last action was to send data
-                print("recent sent message: " + recentData)
-            else:
-                # it last received data
-                print("recent received message: " + recentData)
-
-        print(f"Connected by {addr}")
-        #print(conn)
-
-        #sentData = conn.recv(1024).decode("utf-8").lower()
-        #sentData = receiveMessage(conn)
-
-        sendAMessage(conn, "Knock-Knock")
-        received = receiveAMessage(conn)
-        whichJoke = jokes[ random.randint(0, len(jokes) - 1) ]
-        #print(whichJoke)
-
-        if received == "\tWho's there?":
-            sendAMessage(conn, whichJoke[0])
-
-            received = receiveAMessage(conn)
-            if received == "\t" + whichJoke[0] + " who?":
-                sendAMessage(conn, whichJoke[1])
-                #conn.close()
-            else:
-                sendError(conn)
-                #print("JAKJAJKS")
-
-        else:
-            sendError(conn)
-            #print("i heard " + received)
-
-        conn.close()
+        processRequest(conn)
 
 simpleServer()
