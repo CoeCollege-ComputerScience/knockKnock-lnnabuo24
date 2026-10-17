@@ -30,7 +30,12 @@ def mockDNSLookUp(hostName):
     #s.connect(("192.168.0.225", 2001))
     #s.connect(("192.168.0.43", 2001))
     s.connect((mockDNSServerIP, 2001))
-    msg = hostName + "," + getMyIP()
+    myName = "laurence"
+    #msg = hostName + "," + getMyIP()
+    msg = myName + "," + getMyIP()
+    #
+    # okay
+    # it seems i may have been borrowing names
     #s.send(msg.encode("utf-8"))
     #sendMessage(s, msg)
     s.send(msg.encode("ascii"))
@@ -48,11 +53,12 @@ def mockDNSLookUp(hostName):
         raise ConnectionError("unsafe IP")
     else:
         nextMsg = "where " + hostName
+        print("sent: " + nextMsg)
         sendMessage(s, nextMsg)
 
         #result = receiveMessage(s)
         result = s.recv(1024).decode("ascii")
-        #print(result)
+        print("result: " + result)
         result = result.split(",")
         whatIP = result[0]
         whatStatus = result[1]

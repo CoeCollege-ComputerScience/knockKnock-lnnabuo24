@@ -23,8 +23,38 @@ def simpleClient(host):
     print("closed connection")
     s.close()
 
-#whatIP = input("give me an ip: ")
-whatIP = getMyIP()
+def generalizedKnockKnockClient(host):
+    s = socket()
+    s.connect((host, portNum))
+    msg = input("HEAR or TELL (case insensitive): ")
+    sendMessage(s, msg.upper())
 
-simpleClient( whatIP )
+    received = receiveMessage(s)
+    print("response: " + received)
+    while received != "Protocol Violation" and received != "":
+        #print("gah")
+        msg = input("prompt: ")
+        check = input("add a \\t? (Y or N, default N) ")
+        if check.lower() == "y":
+            msg = "\t" + msg
+        sendMessage(s, msg)
+        received = receiveMessage(s)
+        print("response: " + received)
+    print("closed connection")
+    s.close()
+
+#whatIP = input("give me an ip: ")
+#whatIP = getMyIP()
+
+#name = input("give me a name: ")
+#whatIP, status = mockDNSLookUp(name)
+#whatIP, status = "192.168.0.225", "yeah fine" # <- hughes
+whatIP, status = getMyIP(), "okayish"
+print(whatIP + " " + status)
+
+if status == "unknown":
+    print("cant find them")
+else:
+    #simpleClient( whatIP )
+    generalizedKnockKnockClient(whatIP)
 
