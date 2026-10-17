@@ -15,6 +15,11 @@ for line in fid:
     jokes.append( newJoke )
 fid.close()
 
+# hm
+# hold on
+jokes.append(["Banana", "Orange you glad I didn't say Banana"])
+# including banana in jokes.txt when its a special case felt weird
+
 
 def sendAMessage(socket, message):
     sendMessage(socket, message)
@@ -165,7 +170,7 @@ def extendedKnockKnock_heardItAlready(conn):
         # print("i heard " + received)
     #conn.close()
 
-def generalizedProtocol(conn):
+def generalizedProtocol(conn, addr, theLock):
     received = receiveAMessage(conn)
     if received == "HEAR":
         # extended knock-knock protocol
@@ -186,8 +191,8 @@ def generalizedProtocol(conn):
         received = receiveAMessage(conn)
         if received == "Knock-Knock":
             sendAMessage(conn, "\tWho's there?")
-            received = receiveAMessage(conn)
-            # we now have the namae
+            receivedName = receiveAMessage(conn)
+            # we now have the name
 
             # now to find whether or not the server knows this joke already
             # pycharm why are you correcting my grammar
@@ -196,7 +201,7 @@ def generalizedProtocol(conn):
             for i in jokes:
                 # i[0] is the name used in the joke
                 # i[1] is the punchline
-                if i[0] == received:
+                if i[0] == receivedName:
                     alreadyExists = True
                     break
 
@@ -209,13 +214,31 @@ def generalizedProtocol(conn):
                     sendProtocolViolation(conn)
             else:
                 # havent heard this joke before
-                sendAMessage(conn, received + " who?")
-                received = receiveAMessage(conn)
+                sendAMessage(conn, receivedName + " who?")
+                receivedPunchline = receiveAMessage(conn)
                 # we now have the punchline, how nice
                 print("wow, that was a funny and original joke, i should add that to my jokes list")
+                print("got the lock")
+
+                # add to jokes.txt
+                theLock.acquire()
+                # i sure hope i dont nuke jokes.txt right about now
+                file = open("jokes.txt", "a")
+                file.write("\n" + receivedName + " | " + receivedPunchline + " | " + addr[0])
+                file.close()
+
+                # and make sure this is a joke that can be used without rerunning the server
+                jokes.append([receivedName, receivedPunchline])
+                theLock.release()
+                print("lock dropped")
 
         else:
+            # didnt get knock-knock
             sendProtocolViolation(conn)
+    else:
+        # send a protocol violation if we didnt get hear or tell
+        sendProtocolViolation(conn)
+
     conn.close()
 
 
@@ -228,14 +251,17 @@ def simpleServer():
     s.bind((ip, 2603))
     s.listen()
 
-    #myLock = Lock()
+    myLock = Lock()
+
 
     while True:
         print("Waiting")
         conn, addr = s.accept()
         print(f'connected from {addr}')
+        print(addr)
+        print(addr[0])
         #Thread(target=processRequest, args=(conn,)).start()
-        Thread(target=generalizedProtocol, args=(conn,)).start()
+        Thread(target=generalizedProtocol, args=(conn, addr, myLock,)).start()
         #processRequest(conn)
 
 simpleServer()

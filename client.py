@@ -23,6 +23,7 @@ def simpleClient(host):
     print("closed connection")
     s.close()
 
+
 def generalizedKnockKnockClient(host):
     s = socket()
     s.connect((host, portNum))
@@ -43,6 +44,43 @@ def generalizedKnockKnockClient(host):
     print("closed connection")
     s.close()
 
+
+
+def tellAJoke_generalized(conn, name, punchline):
+    sendMessage(conn, "Knock-Knock")
+    received = receiveMessage(conn) # who's there
+    sendMessage(conn, name) # <name>
+    received = receiveMessage(conn) # <name> who (or heard this one)
+    if received == "I've heard that one already":
+        # heard this one
+        print("i cannot believe they heard " + name + ", " + punchline + " before")
+        sendMessage(conn, "Ok, Sorry")
+    else:
+        # <name> who
+        print("yeah nobody expects the " + name + ", " + punchline)
+        sendMessage(conn, punchline)
+
+# i forgot a server would need to implement the generalized protocol
+# in order to actually receive jokes
+# so i made a tellAJoke function for a server that would follow the standard protocol if it was somehow told a joke
+# oops
+def shareJokesWithHost_generalized(host):
+
+    jokes = []
+    fid = open("jokes.txt", "r")
+    for line in fid:
+        newJoke = line.strip().split(" | ")
+        print(newJoke)
+        jokes.append(newJoke)
+    fid.close()
+
+    for item in jokes:
+        s = socket()
+        s.connect((host, portNum))
+        sendMessage(s, "TELL")
+        received = receiveMessage(s)
+        tellAJoke_generalized(s, item[0], item[1])
+
 #whatIP = input("give me an ip: ")
 #whatIP = getMyIP()
 
@@ -57,4 +95,5 @@ if status == "unknown":
 else:
     #simpleClient( whatIP )
     generalizedKnockKnockClient(whatIP)
+    #shareJokesWithHost_generalized( whatIP )
 
