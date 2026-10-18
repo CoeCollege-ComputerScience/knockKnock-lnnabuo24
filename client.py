@@ -1,7 +1,8 @@
 #from socket import *
 from netTools import *
 
-portNum = 2603
+portNum = 2603 # <- extended
+#portNum = 2605 # <- generalized
 
 def simpleClient(host):
     s = socket()
@@ -26,7 +27,7 @@ def simpleClient(host):
 
 def generalizedKnockKnockClient(host):
     s = socket()
-    s.connect((host, portNum))
+    s.connect((host, 2605))
     msg = input("HEAR or TELL (case insensitive): ")
     sendMessage(s, msg.upper())
 
@@ -76,7 +77,7 @@ def shareJokesWithHost_generalized(host):
 
     for item in jokes:
         s = socket()
-        s.connect((host, portNum))
+        s.connect((host, 2605))
         sendMessage(s, "TELL")
         received = receiveMessage(s)
         tellAJoke_generalized(s, item[0], item[1])

@@ -248,7 +248,8 @@ def simpleServer():
     ip = getMyIP()
     #ip = "127.0.0.1"
     print(ip)
-    s.bind((ip, 2603))
+    #s.bind((ip, 2603))
+    s.bind((ip, 2605))
     s.listen()
 
     myLock = Lock()
